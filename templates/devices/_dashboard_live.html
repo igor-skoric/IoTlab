@@ -1,0 +1,84 @@
+  <div class="stats">
+    <article class="stat">
+      <span class="stat-label">Devices</span>
+      <span class="stat-value">{{ device_count }}</span>
+    </article>
+    <article class="stat">
+      <span class="stat-label">Online now</span>
+      <span class="stat-value">{{ online_count }}</span>
+    </article>
+  </div>
+
+  {% if not device_rows %}
+    <p class="empty">No devices yet. Create one in <a href="/admin/devices/device/add/">Django admin</a> and copy the API key.</p>
+  {% else %}
+    <div class="device-list">
+      {% for row in device_rows %}
+        <section class="device-card">
+          <a class="device-card-head" href="{% url 'device-detail' row.device.device_uid %}">
+            <div>
+              <h2>{{ row.device.name }}</h2>
+              <p class="mono">{{ row.device.get_device_type_display }} · {{ row.device.device_uid }}</p>
+            </div>
+            <span class="status status-{{ row.status }}">{{ row.status }}</span>
+          </a>
+          <p class="meta">
+            Last seen:
+            {% if row.device.last_seen_at %}
+              {{ row.device.last_seen_at|date:"Y-m-d H:i:s T" }}
+            {% else %}
+              never
+            {% endif %}
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sensor</th>
+                  <th>Latest reading</th>
+                  <th>Unit</th>
+                  <th>Measured at</th>
+                  <th>Received at</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sensor in row.device.sensors.all %}
+                  <tr>
+                    <td>{{ sensor.name }}<div class="mono muted">{{ sensor.sensor_uid }}</div></td>
+                    <td class="mono">
+                      {% if sensor.latest_numeric_value is not None %}
+                        {{ sensor.latest_numeric_value }}
+                      {% elif sensor.latest_text_value %}
+                        {{ sensor.latest_text_value }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                    <td>{{ sensor.latest_unit|default:sensor.unit|default:"" }}</td>
+                    <td class="mono">
+                      {% if sensor.latest_measured_at %}
+                        {{ sensor.latest_measured_at|date:"Y-m-d H:i:s T" }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                    <td class="mono">
+                      {% if sensor.latest_received_at %}
+                        {{ sensor.latest_received_at|date:"Y-m-d H:i:s T" }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="5">No sensors yet. They appear after the first telemetry POST.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}

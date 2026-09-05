@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ device.name }} · IoT Lab{% endblock %}
+
+{% block content %}
+  <p class="crumb"><a href="{% url 'dashboard' %}">Dashboard</a> / {{ device.device_uid }}</p>
+
+  <section class="hero compact">
+    <div>
+      <p class="eyebrow">{{ device.get_device_type_display }}</p>
+      <h1>{{ device.name }}</h1>
+      <p class="lede mono">{{ device.device_uid }}</p>
+      {% if device.description %}<p>{{ device.description }}</p>{% endif %}
+    </div>
+    <div class="stats">
+      <article class="stat">
+        <span class="stat-label">Status</span>
+        <span class="status status-{{ status }}">{{ status }}</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Last seen</span>
+        <span class="stat-value small">
+          {% if device.last_seen_at %}{{ device.last_seen_at|date:"Y-m-d H:i:s T" }}{% else %}never{% endif %}
+        </span>
+      </article>
+    </div>
+  </section>
+
+  <h2 class="section-title">Sensors</h2>
+  <div class="sensor-grid">
+    {% for sensor in device.sensors.all %}
+      <article class="sensor-card">
+        <p class="eyebrow">{{ sensor.get_sensor_type_display }}</p>
+        <h3>{{ sensor.name }}</h3>
+        <p class="mono muted">{{ sensor.sensor_uid }}</p>
+        <p class="reading">
+          {% if sensor.latest_numeric_value is not None %}
+            {{ sensor.latest_numeric_value }}<span class="unit">{{ sensor.latest_unit|default:sensor.unit|default:"" }}</span>
+          {% elif sensor.latest_text_value %}
+            {{ sensor.latest_text_value }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+        <p class="meta">
+          Measured:
+          {% if sensor.latest_measured_at %}
+            {{ sensor.latest_measured_at|date:"Y-m-d H:i:s T" }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+        <p class="meta">
+          Received:
+          {% if sensor.latest_received_at %}
+            {{ sensor.latest_received_at|date:"Y-m-d H:i:s T" }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </article>
+    {% empty %}
+      <p class="empty">No sensors yet. They are created automatically on the first telemetry POST.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="section-title">Last 100 readings</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Measured at</th>
+          <th>Received at</th>
+          <th>Sensor</th>
+          <th>Value</th>
+          <th>Unit</th>
+          <th>Reading uid</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reading in readings %}
+          <tr>
+            <td class="mono">{{ reading.measured_at|date:"Y-m-d H:i:s T" }}</td>
+            <td class="mono">{{ reading.received_at|date:"Y-m-d H:i:s T" }}</td>
+            <td>{{ reading.sensor.name|default:reading.sensor_uid }}</td>
+            <td class="mono">
+              {% if reading.numeric_value is not None %}
+                {{ reading.numeric_value }}
+              {% else %}
+                {{ reading.text_value|default:"—" }}
+              {% endif %}
+            </td>
+            <td>{{ reading.unit|default:"" }}</td>
+            <td class="mono">{{ reading.reading_uid|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">No telemetry received yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

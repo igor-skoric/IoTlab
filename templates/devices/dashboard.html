@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · IoT Lab{% endblock %}
+
+{% block extra_head %}
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Test laboratory</p>
+      <h1>Device telemetry</h1>
+      <p class="lede">Online means last seen within {{ online_window_seconds }} seconds. Sensor values refresh every 5 seconds. Click a device for the last 100 readings.</p>
+    </div>
+  </section>
+
+  <div
+    id="dashboard-live"
+    hx-get="{% url 'dashboard-live' %}"
+    hx-trigger="every 5s"
+    hx-swap="innerHTML"
+  >
+    {% include "devices/_dashboard_live.html" %}
+  </div>
+{% endblock %}
